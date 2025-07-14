@@ -1,36 +1,46 @@
 package use_case.login;
 
 import entity.User;
+import use_case.signup.SignupUserDataAccessInterface;
 
 /**
- * DAO boundary for the Login use case.
+ * The interface for Login data access:
+ *  - user lookup
+ *  - current‐user tracking (for “who’s logged in”)
+ * We also extend the Signup DAO interface so that the Test’s call to
+ *   userRepository.save(user);
+ * will compile.
  */
-public interface LoginUserDataAccessInterface {
+public interface LoginUserDataAccessInterface
+        extends SignupUserDataAccessInterface {
 
     /**
-     * Check if a user with the given username exists.
-     * @param username the username to look up
-     * @return true if the user exists; false otherwise
+     * Returns true if a user with this name exists.
+     *
+     * @param username the name to look up
+     * @return whether that user is present
      */
     boolean existsByName(String username);
 
     /**
-     * Fetch the User entity for the given username.
-     * @param username the username to retrieve
-     * @return the User, or null if not found
+     * Fetches the stored User entity for this username.
+     *
+     * @param username the name of the user
+     * @return the User object (never null if existsByName was true)
      */
     User get(String username);
 
     /**
-     * Record that this username is now the “current” (logged‐in) user.
-     * @param username the username to set as current, or null to clear
+     * Records which user is currently logged in.
+     *
+     * @param username the user name to mark as current
      */
     void setCurrentUser(String username);
 
     /**
-     * Return the username most recently passed to setCurrentUser(),
-     * or null if none.
-     * @return the current logged‐in username, or null
+     * Retrieves who is currently logged in.
+     *
+     * @return the username, or null if no one is logged in
      */
     String getCurrentUser();
 }
