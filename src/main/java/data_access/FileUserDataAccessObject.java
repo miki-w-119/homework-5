@@ -17,11 +17,12 @@ import use_case.login.LoginUserDataAccessInterface;
 import use_case.signup.SignupUserDataAccessInterface;
 
 /**
- * DAO for user data implemented using a File to persist the data.
+ * DAO for user data implemented using a CSV file.
  */
-public class FileUserDataAccessObject implements SignupUserDataAccessInterface,
-                                                 LoginUserDataAccessInterface,
-                                                 ChangePasswordUserDataAccessInterface {
+public class FileUserDataAccessObject
+        implements SignupUserDataAccessInterface,
+        LoginUserDataAccessInterface,
+        ChangePasswordUserDataAccessInterface {
 
     private static final String HEADER = "username,password";
 
@@ -29,62 +30,59 @@ public class FileUserDataAccessObject implements SignupUserDataAccessInterface,
     private final Map<String, Integer> headers = new LinkedHashMap<>();
     private final Map<String, User> accounts = new HashMap<>();
 
+    /**
+     * Constructs the DAO, creating the file if empty, or loading existing users.
+     *
+     * @param csvPath     Path to the CSV file.
+     * @param userFactory Factory to create User instances.
+     * @throws IOException if file I/O fails.
+     * @throws RuntimeException 1346
+     */
     public FileUserDataAccessObject(String csvPath, UserFactory userFactory) throws IOException {
-
-        csvFile = new File(csvPath);
+        this.csvFile = new File(csvPath);
         headers.put("username", 0);
         headers.put("password", 1);
 
         if (csvFile.length() == 0) {
-            save();
+            saveToFile();
         }
         else {
-
             try (BufferedReader reader = new BufferedReader(new FileReader(csvFile))) {
-                final String header = reader.readLine();
-
-                if (!header.equals(HEADER)) {
-                    throw new RuntimeException(String.format("header should be%n: %s%but was:%n%s", HEADER, header));
+                final String headerLine = reader.readLine();
+                if (!HEADER.equals(headerLine)) {
+                    throw new RuntimeException(
+                            String.format("Header mismatch: expected \"%s\" but was \"%s\"", HEADER, headerLine));
                 }
-
                 String row;
                 while ((row = reader.readLine()) != null) {
-                    final String[] col = row.split(",");
-                    final String username = String.valueOf(col[headers.get("username")]);
-                    final String password = String.valueOf(col[headers.get("password")]);
-                    final User user = userFactory.create(username, password);
-                    accounts.put(username, user);
+                    final String[] cols = row.split(",");
+                    final String name = cols[headers.get("username")];
+                    final String pwd = cols[headers.get("password")];
+                    accounts.put(name, userFactory.create(name, pwd));
                 }
             }
         }
     }
 
-    private void save() {
-        final BufferedWriter writer;
-        try {
-            writer = new BufferedWriter(new FileWriter(csvFile));
-            writer.write(String.join(",", headers.keySet()));
+    private void saveToFile() {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(csvFile))) {
+            // write header
+            writer.write(HEADER);
             writer.newLine();
-
+            // write each user
             for (User user : accounts.values()) {
-                final String line = String.format("%s,%s",
-                        user.getName(), user.getPassword());
-                writer.write(line);
+                writer.write(user.getName() + "," + user.getPassword());
                 writer.newLine();
             }
-
-            writer.close();
-
         }
-        catch (IOException ex) {
-            throw new RuntimeException(ex);
+        catch (IOException exception) {
+            throw new RuntimeException("Failed to save user accounts", e);
         }
     }
 
     @Override
-    public void save(User user) {
-        accounts.put(user.getName(), user);
-        this.save();
+    public boolean existsByName(String username) {
+        return accounts.containsKey(username);
     }
 
     @Override
@@ -93,14 +91,32 @@ public class FileUserDataAccessObject implements SignupUserDataAccessInterface,
     }
 
     @Override
-    public boolean existsByName(String identifier) {
-        return accounts.containsKey(identifier);
+    public void save(User user) {
+        accounts.put(user.getName(), user);
+        saveToFile();
     }
 
     @Override
     public void changePassword(User user) {
-        // Replace the User object in the map
         accounts.put(user.getName(), user);
-        save();
+        saveToFile();
+    }
+
+    // ─── Task 2.1 stubs ──────────────────────────────────────────────────────
+
+    /**
+     * No‐op for file‐based DAO; login tracking not persisted here.
+     */
+    @Override
+    public void setCurrentUser(String username) {
+        // intentionally left blank
+    }
+
+    /**
+     * Always returns null in this implementation.
+     */
+    @Override
+    public String getCurrentUser() {
+        return null;
     }
 }

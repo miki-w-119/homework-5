@@ -9,20 +9,20 @@ import use_case.login.LoginUserDataAccessInterface;
 import use_case.signup.SignupUserDataAccessInterface;
 
 /**
- * In-memory implementation of the DAO for storing user data. This implementation does
- * NOT persist data between runs of the program.
+ * In-memory DAO for signup, login, and change-password.
  */
-public class InMemoryUserDataAccessObject implements SignupUserDataAccessInterface,
-                                                     LoginUserDataAccessInterface,
-                                                     ChangePasswordUserDataAccessInterface {
+public class InMemoryUserDataAccessObject
+        implements SignupUserDataAccessInterface,
+        LoginUserDataAccessInterface,
+        ChangePasswordUserDataAccessInterface {
 
     private final Map<String, User> users = new HashMap<>();
-
     private String currentUser;
 
+    // ─── SignupUserDataAccessInterface ────────────────────────────────────
     @Override
-    public boolean existsByName(String identifier) {
-        return users.containsKey(identifier);
+    public boolean existsByName(String username) {
+        return users.containsKey(username);
     }
 
     @Override
@@ -30,15 +30,26 @@ public class InMemoryUserDataAccessObject implements SignupUserDataAccessInterfa
         users.put(user.getName(), user);
     }
 
+    // ─── LoginUserDataAccessInterface ─────────────────────────────────────
     @Override
     public User get(String username) {
         return users.get(username);
     }
 
     @Override
-    public void changePassword(User user) {
-        // Replace the old entry with the new password
-        users.put(user.getName(), user);
+    public void setCurrentUser(String username) {
+        this.currentUser = username;
     }
 
+    @Override
+    public String getCurrentUser() {
+        return currentUser;
+    }
+
+    // ─── ChangePasswordUserDataAccessInterface ───────────────────────────
+    @Override
+    public void changePassword(User user) {
+        // overwrite entry with updated password
+        users.put(user.getName(), user);
+    }
 }
