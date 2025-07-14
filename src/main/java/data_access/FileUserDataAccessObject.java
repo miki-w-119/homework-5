@@ -76,7 +76,7 @@ public class FileUserDataAccessObject
             }
         }
         catch (IOException exception) {
-            throw new RuntimeException("Failed to save user accounts", e);
+            throw new RuntimeException("Failed to save user accounts", exception);
         }
     }
 
