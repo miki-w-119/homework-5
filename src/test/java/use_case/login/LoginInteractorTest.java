@@ -21,7 +21,7 @@ public class LoginInteractorTest {
         // Arrange
         LoginInputData inputData = new LoginInputData("Paul", "password");
 
-        // Use the concrete DAO so we have save(...) available
+        // *** DECLARE THE CONCRETE DAO SO save() IS AVAILABLE ***
         InMemoryUserDataAccessObject userRepository =
                 new InMemoryUserDataAccessObject();
 
@@ -56,6 +56,8 @@ public class LoginInteractorTest {
     public void successUserLoggedInTest() {
         // Arrange
         LoginInputData inputData = new LoginInputData("Paul", "password");
+
+        // Concrete DAO again
         InMemoryUserDataAccessObject userRepository =
                 new InMemoryUserDataAccessObject();
 
@@ -96,6 +98,8 @@ public class LoginInteractorTest {
     public void failureUserDoesNotExistTest() {
         // Arrange
         LoginInputData inputData = new LoginInputData("Paul", "password");
+
+        // Concrete DAO so save() is on the type
         InMemoryUserDataAccessObject userRepository =
                 new InMemoryUserDataAccessObject();
 
